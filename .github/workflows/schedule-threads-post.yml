@@ -1,0 +1,32 @@
+ name: Schedule Threads Post
+   on:
+          schedule:
+        # Exécute toutes les 6 heures (vous pouvez ajuster la fréquence
+# Voir https://crontab.guru/ pour des exemples
+        - cron: '0 */6 * * *' 
+       workflow_dispatch:
+         # Permet de déclencher manuellement le workflow depuis l'interface GitHub
+   
+   jobs:
+        publish-post:
+       runs-on: ubuntu-latest
+          steps:
+          - name: Checkout repository
+             uses: actions/checkout@v4
+  
+       - name: Set up Python
+         uses: actions/setup-python@v5
+              with:
+               python-version: '3.x' # Utilise la dernière version stable de Python 3
+  
+         - name: Install dependencies
+               run: pip install requests
+  
+             - name: Run Threads Publisher Script
+                run: python publish_threads.py
+               env:
+# Récupère le secret que nous avons créé
+              ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+            # L'ID utilisateur Threads (peut être gardé en dur car non sensible,
+# ou déplacé dans les secrets si tu veux plus de flexibilité)
+              THREADS_USER_ID: "37008471638752388"
