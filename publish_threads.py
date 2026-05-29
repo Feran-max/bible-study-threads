@@ -1,6 +1,7 @@
 import os
 import requests
 import random
+import time
 
 # ─── Configuration ───────────────────────────────────────────────────────────
 THREADS_ACCESS_TOKEN = os.getenv("THREADS_ACCESS_TOKEN")
@@ -16,7 +17,6 @@ FALLBACK_POSTS = [
 ]
 
 def get_threads_user_id() -> str:
-    """Récupère dynamiquement le User ID depuis le token."""
     resp = requests.get(
         "https://graph.threads.net/v1.0/me",
         params={"fields": "id,username", "access_token": THREADS_ACCESS_TOKEN},
@@ -83,6 +83,10 @@ def publish_to_threads(user_id: str, text: str) -> bool:
 
     container_id = create_resp.json()["id"]
     print(f"✅ Container créé : {container_id}")
+
+    # Attente obligatoire — Meta exige que le container soit prêt
+    print("⏳ Attente 30 secondes (délai requis par Meta)...")
+    time.sleep(30)
 
     # Étape 2 : Publier
     publish_resp = requests.post(
