@@ -2,9 +2,8 @@ name: Publish Threads (Cron)
 
 on:
   schedule:
-    # Exécute chaque jour à 08h00 UTC (ajuste selon ton fuseau horaire)
-    - cron: "0 8 * * *"
-  workflow_dispatch: # Permet aussi le déclenchement manuel depuis l'UI GitHub
+    - cron: "0 */3 * * *"
+  workflow_dispatch:
 
 jobs:
   publish:
@@ -19,13 +18,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Installation des dépendances
-        run: |
-          pip install -r requirements.txt
+      - name: Installation des dependances
+        run: pip install requests
 
-      - name: Lancer le script de publication
+      - name: Publication sur Threads
         env:
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          THREADS_TOKEN: ${{ secrets.THREADS_TOKEN }}
-        run: |
-          python publish_threads.py
+        run: python publish_threads.py
