@@ -1,97 +1,96 @@
-import requests
-import time
-import random
 import os
+import requests
+import random
 
-# --- Configuration Générale ---
-ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
-THREADS_USER_ID = os.getenv("THREADS_USER_ID", "37008471638752388")
+# ─── Configuration ───────────────────────────────────────────────────────────
+THREADS_USER_ID = "37008471638752388"
+THREADS_ACCESS_TOKEN = os.getenv("THREADS_ACCESS_TOKEN")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_MODEL = "llama3-8b-8192"
 
-def generate_content_with_groq():
-    """Génère du contenu biblique dynamique via Groq API."""
+FALLBACK_POSTS = [
+    "📖 Psaumes 23:1 — L'Éternel est mon berger : je ne manquerai de rien.\n\nQuelle promesse tiens-tu de Dieu aujourd'hui ?\n\n#BibleStudy #Foi #Espoir",
+    "✨ Jean 3:16 — Car Dieu a tant aimé le monde qu'il a donné son Fils unique.\n\nComment ressens-tu cet amour dans ta vie ?\n\n#Bible #Amour #Grace",
+    "🙏 Proverbes 3:5 — Confie-toi en l'Éternel de tout ton cœur.\n\nDans quel domaine dois-tu lui faire confiance aujourd'hui ?\n\n#Sagesse #Confiance #Bible",
+    "🌟 Philippiens 4:13 — Je puis tout par celui qui me fortifie.\n\nQuel défi affrontes-tu avec cette force aujourd'hui ?\n\n#BibleStudy #Force #Foi",
+    "💛 Jérémie 29:11 — Je connais les projets que j'ai formés sur vous.\n\nFais-tu confiance au plan de Dieu pour ta vie ?\n\n#Espoir #Bible #Bénédiction",
+]
+
+def generate_content_with_groq() -> str:
     if not GROQ_API_KEY:
-        print("⚠️ GROQ_API_KEY non trouvée. Utilisation du contenu statique.")
-        return None
+        print("⚠️ GROQ_API_KEY manquante, contenu statique utilisé.")
+        return random.choice(FALLBACK_POSTS)
 
-    url = "https://api.groq.com/openai/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    
-    # On choisit aléatoirement un type de prompt
-    prompts = [
-        "Give me a powerful Bible verse with a 2-sentence reflection for someone building their faith. Format: 'Verse | Reflection'.",
-        "Ask a thought-provoking question about daily Christian life to engage a Bible study community.",
-        "Give me a short inspiring message about Bible study and mention the '30-Day Bible Study Starter Kit'."
-    ]
-    
-    payload = {
-        "model": "llama3-8b-8192",
-        "messages": [{"role": "user", "content": random.choice(prompts)}],
-        "temperature": 0.7
-    }
+    prompt = """Tu es un créateur de contenu chrétien inspirant pour Threads.
+Génère un post court (max 480 caractères) qui inclut :
+- Un verset biblique avec sa référence complète
+- Une réflexion personnelle courte et sincère
+- Une question pour engager la communauté
+- 2-3 hashtags : #BibleStudy #Foi et un autre pertinent
+Réponds uniquement avec le texte du post, sans introduction ni guillemets."""
 
     try:
-        response = requests.post(url, headers=headers, json=payload)
+        response = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": GROQ_MODEL,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 300,
+                "temperature": 0.85,
+            },
+            timeout=30,
+        )
         response.raise_for_status()
-        content = response.json()['choices'][0]['message']['content']
-        return content + "\n\n#BibleStudy #Faith #ChristianLife"
-    except Exception as e:
-        print(f"❌ Erreur Groq : {e}")
-        return None
-
-# --- Contenu de Secours (Statique) ---
-POST_TYPES = {
-    "verse": {
-        "template": "📖 Verse of the Day: {verse} \n\n{reflection}\n\n#BibleStudy #Faith",
-        "data": [
-            {"verse": "Psalm 23:1", "reflection": "The LORD is my shepherd; I shall not want."},
-            {"verse": "Jeremiah 29:11", "reflection": "God has a wonderful plan for us. Let's trust in His promises."}
-        ]
-    }
-}
-
-def get_content():
-    # On essaie d'abord Groq
-    content = generate_content_with_groq()
-    if content:
+        content = response.json()["choices"][0]["message"]["content"].strip()
+        print(f"✅ Contenu Groq généré ({len(content)} caractères)")
         return content
-    
-    # Sinon, on utilise le statique
-    vt = POST_TYPES["verse"]
-    item = random.choice(vt["data"])
-    return vt["template"].format(**item)
+    except Exception as e:
+        print(f"⚠️ Groq échoué ({e}), fallback statique.")
+        return random.choice(FALLBACK_POSTS)
 
-def publish_to_threads(token, user_id, text):
-    if not token or not user_id:
-        print("❌ Token ou ID manquant.")
-        return False
+def publish_to_threads(text: str) -> bool:
+    base_url = f"https://graph.threads.net/v1.0/{THREADS_USER_ID}"
 
-    base_url = "https://graph.threads.net/v1.0"
-    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    # Étape 1 : Créer le container
+    create_resp = requests.post(
+        f"{base_url}/threads",
+        data={
+            "media_type": "TEXT",
+            "text": text,
+            "access_token": THREADS_ACCESS_TOKEN,
+        },
+        timeout=30,
+    )
+    create_resp.raise_for_status()
+    container_id = create_resp.json()["id"]
+    print(f"✅ Container créé : {container_id}")
 
-    # 1. Créer le conteneur
-    print(f"🔄 Création du conteneur...")
-    res = requests.post(f"{base_url}/{user_id}/threads", headers=headers, json={"text": text})
-    if res.status_code != 200:
-        print(f"❌ Erreur conteneur : {res.json()}")
-        return False
-    
-    container_id = res.json().get("id")
-    time.sleep(2)
-
-    # 2. Publier
-    print(f"🚀 Publication...")
-    res = requests.post(f"{base_url}/{user_id}/threads_publish", headers=headers, json={"creation_id": container_id})
-    if res.status_code == 200:
-        print(f"✅ Succès ! ID : {res.json().get('id')}")
-        return True
-    else:
-        print(f"❌ Erreur publication : {res.json()}")
-        return False
+    # Étape 2 : Publier
+    publish_resp = requests.post(
+        f"{base_url}/threads_publish",
+        data={
+            "creation_id": container_id,
+            "access_token": THREADS_ACCESS_TOKEN,
+        },
+        timeout=30,
+    )
+    publish_resp.raise_for_status()
+    post_id = publish_resp.json()["id"]
+    print(f"✅ Post publié sur Threads ! ID : {post_id}")
+    return True
 
 if __name__ == "__main__":
-    message = get_content()
-    publish_to_threads(ACCESS_TOKEN, THREADS_USER_ID, message)
+    if not THREADS_ACCESS_TOKEN:
+        print("❌ THREADS_ACCESS_TOKEN manquant.")
+        exit(1)
+
+    print("🚀 Génération du contenu...")
+    content = generate_content_with_groq()
+    print(f"\n📝 Post :\n{content}\n")
+
+    print("📤 Publication sur Threads...")
+    publish_to_threads(content)
