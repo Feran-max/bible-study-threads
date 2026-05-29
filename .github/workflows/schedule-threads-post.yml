@@ -1,28 +1,31 @@
- name: Schedule Threads Post
-    2
-    3     on:
-    4       schedule:
-    5         - cron: '0 */3 * * *' # Publie toutes les 3 heures
-    6       workflow_dispatch:
-    7
-    8     jobs:
-    9       publish-post:
-   10         runs-on: ubuntu-latest
-   11         steps:
-   12           - name: Checkout repository
-   13             uses: actions/checkout@v4
-   14
-   15           - name: Set up Python
-   16             uses: actions/setup-python@v5
-   17             with:
-   18               python-version: '3.x'
-   19
-   20           - name: Install dependencies
-   21             run: pip install requests
-   22
-   23           - name: Run Threads Publisher Script
-   24             run: python publish_threads.py
-   25             env:
-   26               ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
-   27               THREADS_USER_ID: '37008471638752388'
-   28               GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+name: Publish Threads (Cron)
+
+on:
+  schedule:
+    # Exécute chaque jour à 08h00 UTC (ajuste selon ton fuseau horaire)
+    - cron: "0 8 * * *"
+  workflow_dispatch: # Permet aussi le déclenchement manuel depuis l'UI GitHub
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Installation de Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Installation des dépendances
+        run: |
+          pip install -r requirements.txt
+
+      - name: Lancer le script de publication
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          THREADS_TOKEN: ${{ secrets.THREADS_TOKEN }}
+        run: |
+          python publish_threads.py
