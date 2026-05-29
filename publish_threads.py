@@ -39,20 +39,6 @@ No introduction, no quotes, just the post.""",
             "Which book of the Bible do you keep coming back to, and why? 🤔\n\nMine changes every season of life.\n\n#BibleStudy #Faith",
         ]
     },
-    "study_tip": {
-        "prompt": """You are a Bible study coach on Threads targeting English-speaking beginners.
-Generate a practical Bible study tip post (max 480 characters) that:
-- Gives ONE specific, actionable tip for studying the Bible
-- Is beginner-friendly and encouraging
-- Connects to the 30-Day Bible Study Starter Kit concept
-- Ends with 2-3 hashtags: #BibleStudy and others
-Reply ONLY with the post text.""",
-        "fallbacks": [
-            "💡 Bible study tip: Start with just 5 minutes a day.\n\nPick ONE verse. Read it slowly. Ask yourself: What does this tell me about God? What does it tell me about myself?\n\nConsistency beats marathon sessions every time.\n\n#BibleStudy #Faith #Devotional",
-            "💡 Try reading a Psalm out loud today.\n\nThere's something powerful about hearing the words — not just seeing them. Psalm 91 is a great place to start.\n\nWhich Psalm speaks to you most?\n\n#BibleStudy #Faith #Psalms",
-            "💡 Context is everything in Bible study.\n\nBefore diving into a verse, read the whole chapter. The meaning changes completely when you see the full picture.\n\nWhich verse hit differently once you understood the context?\n\n#BibleStudy #Faith",
-        ]
-    },
     "testimony_story": {
         "prompt": """You are a Christian storyteller on Threads targeting an English-speaking audience.
 Generate a short testimony-style or faith story post (max 480 characters) that:
@@ -81,22 +67,22 @@ Reply ONLY with the post text.""",
     }
 }
 
-# ─── Rotation intelligente selon l'heure ─────────────────────────────────────
+# ─── Rotation optimisée pour audience US (EST) ───────────────────────────────
+# 12h UTC = 8h AM EST  → Morning devotion
+# 17h UTC = 1h PM EST  → Lunch engagement
+# 22h UTC = 6h PM EST  → Evening story
+#  2h UTC = 10h PM EST → Night CTA
+SCHEDULE = {
+    12: "verse_reflection",
+    17: "engagement_question",
+    22: "testimony_story",
+    2:  "product_cta",
+}
+
 def get_post_type_for_hour() -> str:
     hour = datetime.utcnow().hour
-    schedule = {
-        0:  "verse_reflection",
-        3:  "verse_reflection",
-        6:  "study_tip",
-        9:  "engagement_question",
-        12: "verse_reflection",
-        15: "testimony_story",
-        18: "verse_reflection",
-        21: "product_cta",
-    }
-    # Trouver le créneau le plus proche
-    closest = min(schedule.keys(), key=lambda h: abs(h - hour))
-    return schedule[closest]
+    closest = min(SCHEDULE.keys(), key=lambda h: abs(h - hour))
+    return SCHEDULE[closest]
 
 # ─── Génération du contenu ───────────────────────────────────────────────────
 def generate_content(post_type: str) -> str:
