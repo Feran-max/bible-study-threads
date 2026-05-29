@@ -6,7 +6,8 @@ import os # Pour potentiellement lire des variables d'environnement plus tard
 # --- Configuration Générale ---
 # Pour l'instant, on garde le token ici pour le développement local.
 # Dans Google Cloud, on le chargera depuis le Secret Manager.
-ACCESS_TOKEN = "THAAcYZAMDTUAJBYllFWnBvVDhjWWJLSndjc2FjZA0dqaWN5b01UZA0J1TlVXeUlRWXV6QzdTdGhUQWNmeVJJYUZA4MlZAOSzhfbVFCX09CVi1jSzNST0pQR1pVcDZABZAUR1Y2NDUDRDUGdubVBkYXFEUmFqZATFHWm5paU1mZAFhtNmlKejFqYk8wUnZAJMXczNWd2QnZA0elNwem90dzdSTXU0emxVSGtkZAWUZD"
+ACCESS_TOKEN = os.getenv("ACCESS_TOKEN", "THAAcYZAMDTUAJBYllFWnBvVDhjWWJLSndjc2FjZA0dqaWN5b01UZA0J1TlVXeUlRWXV6QzdTdGhUQWNmeVJJYUZA4MlZAOSzhfbVFCX09CVi1jSzNST0pQR1pVcDZABZAUR1Y2NDUDRDUGdubVBkYXFEUmFqZATFHWm5paU1mZAFhtNmlKejFqYk8wUnZAJMXczNWd2QnZA0elNwem90dzdSTXU0emxVSGtkZAWUZD")
+THREADS_USER_ID = os.getenv("THREADS_USER_ID", "37008471638752388")
 # On aura besoin du THREADS_USER_ID, mais on va le récupérer via l'API pour être sûr
 # THREADS_USER_ID = "32979938793" # On le récupérera dynamiquement
 
