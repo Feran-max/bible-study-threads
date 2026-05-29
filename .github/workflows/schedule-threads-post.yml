@@ -2,7 +2,10 @@ name: Publish Threads (Cron)
 
 on:
   schedule:
-    - cron: "0 */3 * * *"
+    - cron: "0 12 * * *"   # 8h AM EST  — Morning devotion
+    - cron: "0 17 * * *"   # 1h PM EST  — Lunch engagement
+    - cron: "0 22 * * *"   # 6h PM EST  — Evening story
+    - cron: "0 2 * * *"    # 10h PM EST — Night CTA
   workflow_dispatch:
 
 jobs:
