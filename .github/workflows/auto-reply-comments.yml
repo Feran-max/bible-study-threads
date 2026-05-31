@@ -1,0 +1,36 @@
+name: Auto-reply Comments (Cron)
+
+on:
+  schedule:
+    # Vérifie les nouveaux commentaires toutes les heures
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+jobs:
+  reply:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Installation de Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Installation des dépendances
+        run: pip install requests
+
+      - name: Lire et répondre aux commentaires
+        env:
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: python reply_threads.py
+
+      - name: Sauvegarder les IDs traités
+        uses: actions/upload-artifact@v4
+        with:
+          name: replied-ids
+          path: replied_ids.json
+          if-no-files-found: ignore
