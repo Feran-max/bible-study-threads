@@ -2,15 +2,12 @@ name: Refresh Threads Token (Auto)
 
 on:
   schedule:
-    # Renouvelle le token tous les 45 jours (avant expiration des 60 jours)
     - cron: "0 6 */45 * *"
   workflow_dispatch:
 
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
 
     steps:
       - name: Checkout du code
@@ -31,3 +28,21 @@ jobs:
           META_APP_SECRET: ${{ secrets.META_APP_SECRET }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python refresh_token.py
+
+      - name: Alerte email si échec
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.ALERT_EMAIL }}
+          password: ${{ secrets.ALERT_EMAIL_PASSWORD }}
+          subject: "🔴 Bot Threads — Renouvellement token échoué"
+          to: ${{ secrets.ALERT_EMAIL }}
+          from: ${{ secrets.ALERT_EMAIL }}
+          body: |
+            Le renouvellement automatique du token Threads a échoué !
+            
+            Action requise : Va sur developers.facebook.com et génère un nouveau token manuellement.
+            
+            Logs : https://github.com/Feran-max/bible-study-threads/actions
