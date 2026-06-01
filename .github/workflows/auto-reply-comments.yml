@@ -2,7 +2,7 @@ name: Auto-reply Comments (Cron)
 
 on:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "0 */6 * * *"
   workflow_dispatch:
 
 jobs:
@@ -21,7 +21,7 @@ jobs:
           python-version: "3.11"
 
       - name: Installation des dépendances
-        run: pip install requests
+        run: pip install requests pynacl
 
       - name: Lire et répondre aux commentaires
         env:
