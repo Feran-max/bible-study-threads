@@ -2,10 +2,7 @@ name: Publish Threads (Cron)
 
 on:
   schedule:
-    - cron: "0 12 * * *"   # 8h AM EST  — Morning devotion
-    - cron: "0 17 * * *"   # 1h PM EST  — Lunch engagement
-    - cron: "0 22 * * *"   # 6h PM EST  — Evening story
-    - cron: "0 2 * * *"    # 10h PM EST — Night CTA
+    - cron: "0 */3 * * *"
   workflow_dispatch:
 
 jobs:
@@ -21,7 +18,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Installation des dependances
+      - name: Installation des dépendances
         run: pip install requests
 
       - name: Publication sur Threads
@@ -29,3 +26,25 @@ jobs:
           THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: python publish_threads.py
+
+      - name: Alerte email si échec
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.ALERT_EMAIL }}
+          password: ${{ secrets.ALERT_EMAIL_PASSWORD }}
+          subject: "🔴 Bot Threads — Publication échouée"
+          to: ${{ secrets.ALERT_EMAIL }}
+          from: ${{ secrets.ALERT_EMAIL }}
+          body: |
+            Ton bot Threads a échoué lors de la publication.
+            
+            Vérifie les logs ici :
+            https://github.com/Feran-max/bible-study-threads/actions
+            
+            Causes possibles :
+            - Token Threads expiré
+            - Groq API down
+            - Erreur dans le script
